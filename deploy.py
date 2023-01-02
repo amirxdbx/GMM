@@ -1,136 +1,108 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Mar 31 04:36:06 2022
-
-@author: AmirHossein
-"""
-
-### Libraries
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 import streamlit as st
-from pickle import load
-from bokeh.plotting import figure, show
-################################################################
-scx = load(open('scx.pkl', 'rb'))
-scy = load(open('scy.pkl', 'rb'))
-scpsa1 = load(open('scpsa1.pkl', 'rb'))
-scpsa2 = load(open('scpsa2.pkl', 'rb'))
+import pickle
+import os
+import joblib
+from io import BytesIO
 
-# load the model from disk
-PGs = 'PGs.sav'
-PSA1 = 'PSA1.sav'
-PSA2 = 'PSA2.sav'
-PGs = load(open(PGs, 'rb'))
-PSA1 = load(open(PSA1, 'rb'))
-PSA2 = load(open(PSA2, 'rb'))
+with open('scx.pkl', 'rb') as f:
+    scx = pickle.load(f)
+     
+@st.cache(allow_output_mutation=True)
+def PGs():
+    PGA_model= joblib.load('models/Xgboost_ln(PGA).sav')
+    PGV_model= joblib.load('models/Xgboost_ln(PGV).sav')
+    return PGA_model,PGV_model
+    
+    
+@st.cache(allow_output_mutation=True)
+def call_models():
+    T=[]
+    models=[]  
+    for root, dirs, files in os.walk('models/', topdown=False):
+        for name in files[2:]:
+            if name.find(model) != -1:
+                if name.find('PG') == -1:             
+                    T.append(float((name.replace('.sav','')).replace(f'{model}_ln(PSA=','').replace(')','')))
+                Label= name.replace('.sav','').replace(f'{model}_','')
+                tuned_model= joblib.load(f'models/{name}')
+                models.append(tuned_model)
+    return models,T
 
-
-st.write("""
-# Ground motion model 
-This app predicts the **geometric mean of PGA and PGV and PGD** 
+    
+model='Xgboost'
+st.title("""
+Ground motion model 
+This app predicts the **geometric mean of Ground motion intensities** 
 """)
 
-st.sidebar.header('User Input Parameters')
+st.sidebar.image("logo.png",width=30)
+st.sidebar.title('Define your input')
 
-def user_input_features():
-    Magnitiude = st.sidebar.slider('M_w', 2.8, 7.6, 6.1)
-    Vs30 = st.sidebar.slider('V_s30', 131.0, 1862.0, 345.942)
-    RJB = st.sidebar.slider('R_jb', 0.0, 744.051174593, 10.0)
-    Depth = st.sidebar.slider('Depth', 0.2, 95.0, 5.0)
-    data = {'Magnitiude': Magnitiude,
-            'Vs30': Vs30,
-            'RJB': RJB,
-            'Depth': Depth}
+Mw = st.sidebar.slider("Mw",min_value=4.0, value=6.0,max_value=7.6,step=0.1, help="Please enter a value between 4 and 7.6")
+RJB = st.sidebar.slider("RJB",min_value=0, value=30,max_value=200,step=1, help="Please enter a value between 0 and 200 km")
+Vs30 = st.sidebar.slider("Vs30",min_value=131, value=250,max_value=1380,step=1, help="Please enter a value between 131 and 1380 m/s2")
+type = st.sidebar.radio(
+    "Fault mechanism:",
+    ('Reverse', 'strike-slip', 'Normal'))
+if type=='Reverse':
+    reverse=1
+else:
+    reverse=0
+if type=='Normal':
+    normal=1
+else:
+    normal=0
+if type=='strike-slip':
+    strike_slip=1
+else:
+    strike_slip=0
+    
+x=pd.DataFrame({'Mw':[Mw],'Vs30':[Vs30],'RJB':[RJB],'normal':[normal],'reverse':[reverse],'strike_slip':[strike_slip]})
+st.title('Summary of your inputs:')
+st.write(x)
+st.sidebar.markdown("Made by [Amirhossein Mohammadi](https://www.linkedin.com/in/amir-hossein-mohammadi-86729957/)")
+st.sidebar.markdown("---")
 
-    Unscaled = pd.DataFrame(data, index=[0])
+###############################################################
+st.title('Outputs:')
+PGA_model,PGV_model=PGs()
+PGA=np.exp(PGA_model.predict(scx.transform(x))[0])/100
+PGV=np.exp(PGV_model.predict(scx.transform(x))[0])
+st.text('ln(PGA)= '+ str(np.round(PGA,2)) +'  m/s2')
+st.text('ln(PGV)= '+ str(np.round(PGV,2)) +'  cm/s')
 
-    df1=scx.transform(Unscaled)
-    Scaled = pd.DataFrame(df1, index=[0])
-    return Unscaled,Scaled
+prediction=[] 
+models,T=call_models()
+for Model in models:
+     prediction.append(np.exp(Model.predict(scx.transform(x))[0]))
+            
+fig, ax = plt.subplots(figsize=(8,2))
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.plot(T,prediction,color='k')
+plt.xlabel('T (s)')
+plt.ylabel(r'$PSA\ (cm/s^2)$')
+plt.xlim(0.01,3.5)
+plt.ylim(0,1000)
+plt.grid(which='both')
+plt.savefig('sprectra.png',dpi=600,bbox_inches='tight',pad_inches=0.05)
+plt.gcf().subplots_adjust(bottom=0.15)
 
-Inputs,Scaled_Inputs = user_input_features()
+from PIL import Image
+image = Image.open('sprectra.png')
+st.image(image)
 
-st.subheader('User Input parameters')
-st.write(Inputs)
-
-st.subheader('User scaled Input parameters')
-st.write(Scaled_Inputs)
-
-# import time
-# my_bar = st.progress(0)
-# for percent_complete in range(100):
-#     time.sleep(0.01)
-#     my_bar.progress(percent_complete + 1)
-
-st.subheader('Prediction of geometric means')
-scaled_outputs=PGs.predict(Scaled_Inputs)
-unscaled_outputs=scy.inverse_transform(scaled_outputs)
-PGA_ln_G_mean=unscaled_outputs[0][0]
-PGV_ln_G_mean=unscaled_outputs[0][1]
-PGD_ln_G_mean=unscaled_outputs[0][2]
-
-     
-st.write('$\sqrt{PGA_1.PGA_2}=$', round(float(np.exp(PGA_ln_G_mean)),2))
-st.write('$\sqrt{PGV_1.PGD_2}=$', round(float(np.exp(PGV_ln_G_mean)),2))
-st.write('$\sqrt{PGD_1.PGD_2}=$', round(float(np.exp(PGD_ln_G_mean)),2))
-
-st.subheader('Prediction of PSA1 and PSA2')
-PSA1_out=PSA1.predict(Scaled_Inputs)
-PSA2_out=PSA2.predict(Scaled_Inputs)
-
-file = "Refined_data/T_dir.txt"
-f=open(file,'r')
-T_dir = f.read()
-txt='/T.csv'
-T=np.array(pd.read_csv(f'{T_dir}{txt}'))[0]
-T= np.delete(T, (0), axis=0)
-
-PSA1 = scpsa1.inverse_transform(PSA1_out)*float(np.exp(PGA_ln_G_mean))
-PSA2 = scpsa2.inverse_transform(PSA2_out)*float(np.exp(PGA_ln_G_mean))
-
-p1 = figure(
-      title='This graph is predicted by GMM',
-      x_axis_label='T',
-      y_axis_label='PSA1',max_height=300,
-    height_policy='max')
-
-p1.line(T, PSA1[0], legend_label='Trend', line_width=2)
-st.bokeh_chart(p1, use_container_width=True)
-
-p2 = figure(
-      title='This graph is predicted by GMM',
-      x_axis_label='T',
-      y_axis_label='PSA2',max_height=300,
-    height_policy='max')
-
-p2.line(T, PSA2[0], legend_label='Trend', line_width=2)
-st.bokeh_chart(p2, use_container_width=True)
-
-df1=pd.DataFrame([T,PSA1[0]])
-df2=pd.DataFrame([T,PSA2[0]])
-
-def convert_df(df1):
-   return df1.to_csv().encode('utf-8')
-
-def convert_df(df2):
-   return df2.to_csv().encode('utf-8')
-
-csv1 = convert_df(df1)
-csv2 = convert_df(df2)
+PSAs= pd.DataFrame([prediction],columns=T)
+def convert_df(df):
+    return df.to_csv().encode('utf-8')
+csv = convert_df(PSAs)
 
 st.download_button(
-   "Press to Download PSA1",
-   csv1,
-   "PSA1.csv",
-   "text/csv",
-   key='download-csv'
-)
-
-st.download_button(
-   "Press to Download PSA2",
-   csv2,
-   "PSA2.csv",
-   "text/csv",
-   key='download-csv'
+    label="Download data as CSV",
+    data=csv,
+    file_name='PSAs.csv',
+    mime='text/csv',
 )
