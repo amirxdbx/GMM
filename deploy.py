@@ -27,8 +27,8 @@ def call_models():
                 if name.find('PG') == -1:             
                     T.append(float((name.replace('.sav','')).replace(f'{model}_ln(PSA=','').replace(')','')))
                     names.append(name)
-                tuned_model= joblib.load(f'models/{name}')
-                models.append(tuned_model)
+                    tuned_model= joblib.load(f'models/{name}')
+                    models.append(tuned_model)
     return models,T,names
 
     
