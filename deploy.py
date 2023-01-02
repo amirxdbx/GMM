@@ -95,7 +95,7 @@ for Model in models:
 # image = Image.open('sprectra.png')
 # st.image(image)
 
-PSAs= pd.DataFrame([prediction],columns=T)
+PSAs= pd.DataFrame([prediction])#,columns=T
 def convert_df(df):
     return df.to_csv().encode('utf-8')
 csv = convert_df(PSAs)
