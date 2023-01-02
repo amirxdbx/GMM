@@ -20,14 +20,16 @@ def PGs():
 def call_models():
     T=[]
     models=[]  
+    names=[]
     for root, dirs, files in os.walk('models/', topdown=False):
         for name in files[2:]:
             if name.find(model) != -1:
                 if name.find('PG') == -1:             
                     T.append(float((name.replace('.sav','')).replace(f'{model}_ln(PSA=','').replace(')','')))
+                    names.append(name)
                 tuned_model= joblib.load(f'models/{name}')
                 models.append(tuned_model)
-    return models,T,name
+    return models,T,names
 
     
 model='Xgboost'
@@ -73,8 +75,8 @@ st.text('ln(PGA)= '+ str(np.round(PGA,2)) +'  m/s2')
 st.text('ln(PGV)= '+ str(np.round(PGV,2)) +'  cm/s')
 
 prediction=[] 
-models,T,name=call_models()
-st.write(name)
+models,T,names=call_models()
+st.write(names)
 prediction=[]
 for Model in models:
      prediction.append(np.exp(Model.predict(scx.transform(x))[0]))
