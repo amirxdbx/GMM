@@ -76,8 +76,8 @@ st.text('ln(PGV)= '+ str(np.round(PGV,2)) +'  cm/s')
 
 prediction=[] 
 models,T,names=call_models()
-st.write(names)
-st.write(T)
+st.write(len(names))
+st.write(len(T))
 
 prediction=[]
 for Model in models:
