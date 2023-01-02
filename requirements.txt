@@ -5,3 +5,5 @@ streamlit==1.9.0
 numpy==1.21.6
 matplotlib==3.6.2
 xgboost==1.7.2
+pickle-mixin==1.0.2
+joblib==1.2.0
