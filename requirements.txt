@@ -1,3 +1,4 @@
+Python==3.8.13
 pandas==1.5.2
 pandasgui==0.2.13
 streamlit==1.9.0
