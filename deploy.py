@@ -22,7 +22,7 @@ def call_models():
     models=[]  
     names=[]
     for root, dirs, files in os.walk('models/', topdown=False):
-        for name in files[2:]:
+        for name in files:
             if name.find(model) != -1:
                 if name.find('PG') == -1:             
                     T.append(float((name.replace('.sav','')).replace(f'{model}_ln(PSA=','').replace(')','')))
@@ -81,23 +81,23 @@ prediction=[]
 for Model in models:
      prediction.append(np.exp(Model.predict(scx.transform(x))[0]))
             
-# fig, ax = plt.subplots(figsize=(8,2))
-# ax.set_xscale('log')
-# ax.set_yscale('log')
-# ax.plot(T,prediction,color='k')
-# plt.xlabel('T (s)')
-# plt.ylabel(r'$PSA\ (cm/s^2)$')
-# plt.xlim(0.01,3.5)
-# plt.ylim(0,1000)
-# plt.grid(which='both')
-# plt.savefig('sprectra.png',dpi=600,bbox_inches='tight',pad_inches=0.05)
-# plt.gcf().subplots_adjust(bottom=0.15)
+fig, ax = plt.subplots(figsize=(8,2))
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.plot(T,prediction,color='k')
+plt.xlabel('T (s)')
+plt.ylabel(r'$PSA\ (cm/s^2)$')
+plt.xlim(0.01,3.5)
+plt.ylim(0,1000)
+plt.grid(which='both')
+plt.savefig('sprectra.png',dpi=600,bbox_inches='tight',pad_inches=0.05)
+plt.gcf().subplots_adjust(bottom=0.15)
 
-# from PIL import Image
-# image = Image.open('sprectra.png')
-# st.image(image)
+from PIL import Image
+image = Image.open('sprectra.png')
+st.image(image)
 
-PSAs= pd.DataFrame([prediction])#,columns=T
+PSAs= pd.DataFrame([prediction],columns=T)
 def convert_df(df):
     return df.to_csv().encode('utf-8')
 csv = convert_df(PSAs)
