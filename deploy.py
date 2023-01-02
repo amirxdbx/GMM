@@ -27,6 +27,7 @@ def call_models():
                     T.append(float((name.replace('.sav','')).replace(f'{model}_ln(PSA=','').replace(')','')))
                 tuned_model= joblib.load(f'models/{name}')
                 models.append(tuned_model)
+                print(name)
     return models,T
 
     
@@ -74,8 +75,6 @@ st.text('ln(PGV)= '+ str(np.round(PGV,2)) +'  cm/s')
 
 prediction=[] 
 models,T=call_models()
-st.write(T)
-st.write((models))
 
 prediction=[]
 for Model in models:
