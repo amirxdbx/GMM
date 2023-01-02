@@ -1,10 +1,8 @@
-Python==3.8.13
 pandas==1.5.2
 pandasgui==0.2.13
 streamlit==1.9.0
 numpy==1.21.6
 matplotlib==3.6.2
-xgboost==1.7.2
 pickle-mixin==1.0.2
 joblib==1.1.0
 scikit-learn==1.0.2
