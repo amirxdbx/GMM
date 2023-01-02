@@ -76,17 +76,18 @@ st.text('ln(PGV)= '+ str(np.round(PGV,2)) +'  cm/s')
 
 prediction=[] 
 models,T,names=call_models()
-st.write(len(names))
-st.write(len(T))
 
 prediction=[]
 for Model in models:
      prediction.append(np.exp(Model.predict(scx.transform(x))[0]))
-            
+
+PSAs= pd.DataFrame([prediction],columns=T)
+PSAs.sort_values(by=["T"]) 
+
 fig, ax = plt.subplots(figsize=(8,2))
 ax.set_xscale('log')
 ax.set_yscale('log')
-ax.plot(T,prediction,color='k')
+ax.plot(PSAs.iloc[0,:],PSAs.iloc[1,:],color='k')
 plt.xlabel('T (s)')
 plt.ylabel(r'$PSA\ (cm/s^2)$')
 plt.xlim(0.01,3.5)
@@ -99,7 +100,6 @@ from PIL import Image
 image = Image.open('sprectra.png')
 st.image(image)
 
-PSAs= pd.DataFrame([prediction],columns=T)
 def convert_df(df):
     return df.to_csv().encode('utf-8')
 csv = convert_df(PSAs)
