@@ -5,7 +5,6 @@ import streamlit as st
 import pickle
 import os
 import joblib
-from io import BytesIO
 
 with open('scx.pkl', 'rb') as f:
     scx = pickle.load(f)
