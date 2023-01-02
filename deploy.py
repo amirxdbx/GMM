@@ -85,6 +85,7 @@ PSAs= pd.DataFrame()
 PSAs['PSAs']=prediction
 PSAs['T']=T
 PSAs.sort_values(by=["T"], inplace = True) 
+PSAs.reset_index(drop=True,inplace=True)
 
 fig, ax = plt.subplots(figsize=(8,2))
 ax.set_xscale('log')
