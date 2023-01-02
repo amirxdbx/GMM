@@ -27,7 +27,7 @@ def call_models():
                     T.append(float((name.replace('.sav','')).replace(f'{model}_ln(PSA=','').replace(')','')))
                 tuned_model= joblib.load(f'models/{name}')
                 models.append(tuned_model)
-    return models,T
+    return models,T,name
 
     
 model='Xgboost'
@@ -73,8 +73,8 @@ st.text('ln(PGA)= '+ str(np.round(PGA,2)) +'  m/s2')
 st.text('ln(PGV)= '+ str(np.round(PGV,2)) +'  cm/s')
 
 prediction=[] 
-models,T=call_models()
-
+models,T,name=call_models()
+st.write(name)
 prediction=[]
 for Model in models:
      prediction.append(np.exp(Model.predict(scx.transform(x))[0]))
