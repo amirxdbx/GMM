@@ -81,8 +81,10 @@ prediction=[]
 for Model in models:
      prediction.append(np.exp(Model.predict(scx.transform(x))[0]))
 
-PSAs= pd.DataFrame([prediction],columns=T)
-PSAs.sort_values(by=["T"]) 
+PSAs= pd.DataFrame()
+PSAs['PSAs']=prediction
+PSAs['T']=T
+PSAs.sort_values(by=["T"], inplace = True) 
 
 fig, ax = plt.subplots(figsize=(8,2))
 ax.set_xscale('log')
