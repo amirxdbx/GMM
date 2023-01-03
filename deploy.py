@@ -35,7 +35,7 @@ def call_models():
 model='Xgboost'
 st.title("""
 Ground motion model 
-This app predicts the **geometric mean of Ground motion intensities** 
+This app predicts the **geometric mean of ground motion intensities** 
 """)
 
 st.sidebar.image("logo.png",width=30)
@@ -69,10 +69,10 @@ st.sidebar.markdown("---")
 ###############################################################
 st.title('Outputs:')
 PGA_model,PGV_model=PGs()
-PGA=np.exp(PGA_model.predict(scx.transform(x))[0])/100
+PGA=np.exp(PGA_model.predict(scx.transform(x))[0])
 PGV=np.exp(PGV_model.predict(scx.transform(x))[0])
-st.text('ln(PGA)= '+ str(np.round(PGA,2)) +'  m/s2')
-st.text('ln(PGV)= '+ str(np.round(PGV,2)) +'  cm/s')
+st.text('PGA= '+ str(np.round(PGA,2)) +'  cm/s2')
+st.text('PGV= '+ str(np.round(PGV,2)) +'  cm/s')
 
 prediction=[] 
 models,T,names=call_models()
