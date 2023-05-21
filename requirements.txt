@@ -1,5 +1,5 @@
 pandas==1.4.2
-streamlit==1.9.0
+streamlit
 numpy==1.20.3
 matplotlib==3.6.2
 pickle-mixin==1.0.2
