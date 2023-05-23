@@ -9,14 +9,14 @@ import joblib
 with open('scx.pkl', 'rb') as f:
     scx = pickle.load(f)
      
-@st.cache(allow_output_mutation=True)
+@st.cache_resource
 def PGs():
     PGA_model= joblib.load('models/Xgboost_ln(PGA).sav')
     PGV_model= joblib.load('models/Xgboost_ln(PGV).sav')
     return PGA_model,PGV_model
     
     
-@st.cache(allow_output_mutation=True)
+@st.cache_resource
 def call_models():
     T=[]
     models=[]  
