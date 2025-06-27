@@ -201,7 +201,7 @@ with open("batch_input_template.xlsx", "rb") as file:
     st.sidebar.download_button(
         label="📥 Download Excel Template",
         data=file,
-        file_name="batch_input_template.xlsx",
+        file_name="example_batch_input.csv",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
