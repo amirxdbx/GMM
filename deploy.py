@@ -224,13 +224,19 @@ if uploaded_file is not None:
     st.subheader("📊 Batch Predictions")
     st.dataframe(df_out)
 
-    # Optional: mean PSA plot
-    mean_psa = df_out[[f'PSA_{t}s' for t in T_list]].mean()
-    fig, ax = plt.subplots(figsize=(8, 3))
-    ax.loglog(T_list, mean_psa, '-b', label='Mean PSA')
-    ax.set(xlabel='T (s)', ylabel='PSA (cm/s²)', xlim=(0.01, 3.5))
-    ax.grid(True, which='both')
-    st.pyplot(fig)
+   # Optional: Plot all PSA curves
+     fig, ax = plt.subplots(figsize=(8, 4))
+     
+     for idx, row in df_out.iterrows():
+         tsa = [row[f'PSA_{t}s'] for t in T_list]
+         ax.loglog(T_list, tsa, alpha=0.6, label=f'Record {idx+1}')
+     
+     ax.set(xlabel='T (s)', ylabel='PSA (cm/s²)', xlim=(0.01, 3.5))
+     ax.grid(True, which='both')
+     ax.set_title("PSA Spectra for All Records")
+     ax.legend(loc='best', fontsize='small', ncol=2)
+     
+     st.pyplot(fig)
 
     # Download option
     csv = df_out.to_csv(index=False).encode('utf-8')
