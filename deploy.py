@@ -197,7 +197,7 @@ Each row must include the following columns:
 - **normal**, **reverse**, **strike_slip** (only one should be 1 per row)
 """)
 
-with open("batch_input_template.xlsx", "rb") as file:
+with open("example_batch_input.csv", "rb") as file:
     st.sidebar.download_button(
         label="📥 Download Excel Template",
         data=file,
@@ -205,14 +205,7 @@ with open("batch_input_template.xlsx", "rb") as file:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-with open("batch_input_template.csv", "rb") as file:
-    st.sidebar.download_button(
-        label="📥 Download CSV Template",
-        data=file,
-        file_name="example_batch_input.csv",
-        mime="text/csv"
-    )
-     
+    
 uploaded_file = st.sidebar.file_uploader("Or upload CSV for batch prediction", type='csv')
 
 # Sidebar footer
