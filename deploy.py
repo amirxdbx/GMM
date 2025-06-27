@@ -231,10 +231,10 @@ if uploaded_file is not None:
          tsa = [row[f'PSA_{t}s'] for t in T_list]
          ax.loglog(T_list, tsa, alpha=0.6, label=f'Record {idx+1}')
      
-     ax.set(xlabel='T (s)', ylabel='PSA (cm/s²)', xlim=(0.01, 3.5))
-     ax.grid(True, which='both')
-     ax.set_title("PSA Spectra for All Records")
-     ax.legend(loc='best', fontsize='small', ncol=2)
+    ax.set(xlabel='T (s)', ylabel='PSA (cm/s²)', xlim=(0.01, 3.5))
+    ax.grid(True, which='both')
+    ax.set_title("PSA Spectra for All Records")
+    ax.legend(loc='best', fontsize='small', ncol=2)
      
      st.pyplot(fig)
 
