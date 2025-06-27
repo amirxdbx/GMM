@@ -225,9 +225,9 @@ if uploaded_file is not None:
     st.dataframe(df_out)
 
    # Optional: Plot all PSA curves
-     fig, ax = plt.subplots(figsize=(8, 4))
+    fig, ax = plt.subplots(figsize=(8, 4))
      
-     for idx, row in df_out.iterrows():
+    for idx, row in df_out.iterrows():
          tsa = [row[f'PSA_{t}s'] for t in T_list]
          ax.loglog(T_list, tsa, alpha=0.6, label=f'Record {idx+1}')
      
