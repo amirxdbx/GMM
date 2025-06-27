@@ -184,9 +184,39 @@ x = pd.DataFrame({
 })
 
 # Sidebar - CSV Upload
+st.sidebar.markdown("### 📥 Batch Prediction Instructions")
+
+st.sidebar.markdown("""
+You can perform predictions for multiple records by uploading a CSV or Excel file.
+
+Each row must include the following columns:
+
+- **Mw** (e.g., 4.0 to 7.6)  
+- **Vs30** (e.g., 131 to 1380 m/s)  
+- **RJB** (e.g., 0 to 200 km)  
+- **normal**, **reverse**, **strike_slip** (only one should be 1 per row)
+""")
+
+with open("batch_input_template.xlsx", "rb") as file:
+    st.sidebar.download_button(
+        label="📥 Download Excel Template",
+        data=file,
+        file_name="batch_input_template.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+with open("batch_input_template.csv", "rb") as file:
+    st.sidebar.download_button(
+        label="📥 Download CSV Template",
+        data=file,
+        file_name="batch_input_template.csv",
+        mime="text/csv"
+    )
+     
 uploaded_file = st.sidebar.file_uploader("Or upload CSV for batch prediction", type='csv')
 
 # Sidebar footer
+
 st.sidebar.markdown("Made by [Amirhossein Mohammadi](https://www.linkedin.com/in/amir-hossein-mohammadi-86729957/)")
 st.sidebar.markdown("---")
 
