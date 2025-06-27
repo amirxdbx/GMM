@@ -236,7 +236,7 @@ if uploaded_file is not None:
     ax.set_title("PSA Spectra for All Records")
     ax.legend(loc='best', fontsize='small', ncol=2)
      
-     st.pyplot(fig)
+    st.pyplot(fig)
 
     # Download option
     csv = df_out.to_csv(index=False).encode('utf-8')
