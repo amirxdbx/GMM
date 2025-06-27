@@ -209,7 +209,7 @@ with open("batch_input_template.csv", "rb") as file:
     st.sidebar.download_button(
         label="📥 Download CSV Template",
         data=file,
-        file_name="batch_input_template.csv",
+        file_name="example_batch_input.csv",
         mime="text/csv"
     )
      
