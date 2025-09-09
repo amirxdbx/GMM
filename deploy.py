@@ -310,7 +310,7 @@ else:
 stds_df = pd.read_csv("stds.csv")
 
 # Plot Tau, Sigma, Phi
-fig, ax = plt.subplots(figsize=(10, 6))
+fig, ax = plt.subplots(figsize=(14, 4))
 ax.plot(stds_df.ID, stds_df['Tau'], label=r'$\tau$', marker='o')
 ax.plot(stds_df.ID, stds_df['Sigma'], label=r'$\sigma$', marker='s')
 ax.plot(stds_df.ID, stds_df['Phi'], label=r'$\phi$', marker='^')
@@ -318,7 +318,7 @@ ax.plot(stds_df.ID, stds_df['Phi'], label=r'$\phi$', marker='^')
 # Rotate x-axis labels
 plt.setp(ax.get_xticklabels(), rotation=90)
 
-ax.set_xlabel("Item ID")
+ax.set_xlabel("IMs")
 ax.set_ylabel("Value")
 ax.set_title("τ, σ, and ϕ for IMs")
 ax.legend()
@@ -334,6 +334,7 @@ with open("stds.csv", "rb") as file:
         file_name="stds.csv",
         mime="text/csv"
     )
+
 
 
 
