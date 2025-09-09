@@ -315,6 +315,9 @@ ax.plot(stds_df.ID, stds_df['Tau'], label=r'$\tau$', marker='o')
 ax.plot(stds_df.ID, stds_df['Sigma'], label=r'$\sigma$', marker='s')
 ax.plot(stds_df.ID, stds_df['Phi'], label=r'$\phi$', marker='^')
 
+# Rotate x-axis labels
+plt.setp(ax.get_xticklabels(), rotation=90)
+
 ax.set_xlabel("Item ID")
 ax.set_ylabel("Value")
 ax.set_title("τ, σ, and ϕ for IMs")
@@ -331,6 +334,7 @@ with open("stds.csv", "rb") as file:
         file_name="stds.csv",
         mime="text/csv"
     )
+
 
 
 
