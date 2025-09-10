@@ -113,7 +113,7 @@ def run_batch(df):
     df['PGV'] = np.exp(PGV_model.predict(X))
 
     for mdl, t in zip(models, T):
-        df[f'PSA_{t}s'] = np.exp(mdl.predict(X))
+        df[f'PSA={t}s'] = np.exp(mdl.predict(X))
 
     return df, sorted(T)
 
@@ -235,6 +235,7 @@ with open("stds.csv", "rb") as file:
         file_name="stds.csv",
         mime="text/csv"
     )
+
 
 
 
