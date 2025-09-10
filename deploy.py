@@ -272,15 +272,15 @@ else:
     PGA = np.exp(PGA_model.predict(scx.transform(x))[0])
     PGV = np.exp(PGV_model.predict(scx.transform(x))[0])
 
-     # Get std values for PGA and PGV
-     Phi_PGA = stds_df.loc[stds_df["ID"] == "ln(PGA)", "Phi"].values[0]
-     Phi_PGV = stds_df.loc[stds_df["ID"] == "ln(PGV)", "Phi"].values[0]
+    # Get std values for PGA and PGV
+    Phi_PGA = stds_df.loc[stds_df["ID"] == "ln(PGA)", "Phi"].values[0]
+    Phi_PGV = stds_df.loc[stds_df["ID"] == "ln(PGV)", "Phi"].values[0]
      
      # Compute ± std ranges
-     PGA_upper = PGA * np.exp(Phi_PGA)
-     PGA_lower = PGA * np.exp(-Phi_PGA)
-     PGV_upper = PGV * np.exp(Phi_PGV)
-     PGV_lower = PGV * np.exp(-Phi_PGV)
+    PGA_upper = PGA * np.exp(Phi_PGA)
+    PGA_lower = PGA * np.exp(-Phi_PGA)
+    PGV_upper = PGV * np.exp(Phi_PGV)
+    PGV_lower = PGV * np.exp(-Phi_PGV)
      
      st.text(f'PGA = {np.round(PGA, 2)} cm/s² (+- {np.round(PGA_upper - PGA, 2)})')
      st.text(f'PGV = {np.round(PGV, 2)} cm/s (+- {np.round(PGV_upper - PGV, 2)})')
@@ -356,6 +356,7 @@ with open("stds.csv", "rb") as file:
         file_name="stds.csv",
         mime="text/csv"
     )
+
 
 
 
