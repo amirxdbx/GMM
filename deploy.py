@@ -113,7 +113,7 @@ def run_batch(df):
     df['PGV'] = np.exp(PGV_model.predict(X))
 
     for mdl, t in zip(models, T):
-        df[f'PSA={t}s'] = np.exp(mdl.predict(X))
+        df[f'PSA_{t}s'] = np.exp(mdl.predict(X))
 
     return df, sorted(T)
 
@@ -178,7 +178,7 @@ else:
     PSAs['T'] = T
     PSAs.sort_values(by=["T"], inplace=True)
     PSAs.reset_index(drop=True, inplace=True)
-    PSAs['Phi'] = [stds_df.loc[stds_df["ID"] == f"ln(PSA_{t})", "Phi"].values[0] for t in PSAs['T']]
+    PSAs['Phi'] = [stds_df.loc[stds_df["ID"] == f"ln(PSA={t})", "Phi"].values[0] for t in PSAs['T']]
     PSAs['Upper'] = PSAs['PSAs'] * np.exp(PSAs['Phi'])
     PSAs['Lower'] = PSAs['PSAs'] * np.exp(-PSAs['Phi'])
 
@@ -235,6 +235,7 @@ with open("stds.csv", "rb") as file:
         file_name="stds.csv",
         mime="text/csv"
     )
+
 
 
 
