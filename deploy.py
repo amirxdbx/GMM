@@ -132,6 +132,8 @@ import io
 # Load scaler
 with open('scx.pkl', 'rb') as f:
     scx = pickle.load(f)
+# Load stds.csv
+stds_df = pd.read_csv("stds.csv")
 
 # Load PGA and PGV models
 @st.cache_resource
@@ -269,8 +271,22 @@ else:
     PGA_model, PGV_model = PGs()
     PGA = np.exp(PGA_model.predict(scx.transform(x))[0])
     PGV = np.exp(PGV_model.predict(scx.transform(x))[0])
-    st.text(f'PGA = {np.round(PGA, 2)} cm/s²')
-    st.text(f'PGV = {np.round(PGV, 2)} cm/s')
+
+     # Get std values for PGA and PGV
+     sigma_PGA = stds_df.loc[stds_df["ID"] == "ln(PGA)", "Sigma"].values[0]
+     sigma_PGV = stds_df.loc[stds_df["ID"] == "ln(PGV)", "Sigma"].values[0]
+     
+     # Compute ± std ranges
+     PGA_upper = PGA * np.exp(sigma_PGA)
+     PGA_lower = PGA * np.exp(-sigma_PGA)
+     PGV_upper = PGV * np.exp(sigma_PGV)
+     PGV_lower = PGV * np.exp(-sigma_PGV)
+     
+     st.text(f'PGA = {np.round(PGA, 2)} cm/s² (+- {np.round(PGA_upper - PGA, 2)})')
+     st.text(f'PGV = {np.round(PGV, 2)} cm/s (+- {np.round(PGV_upper - PGV, 2)})')
+
+    # st.text(f'PGA = {np.round(PGA, 2)} cm/s²')
+    # st.text(f'PGV = {np.round(PGV, 2)} cm/s')
 
     prediction = []
     models, T, names = call_models()
@@ -305,10 +321,6 @@ else:
     csv = convert_df(PSAs)
     st.download_button("📥 Download PSA data as CSV", data=csv, file_name='PSAs.csv', mime='text/csv')
 
-
-# Load stds.csv
-stds_df = pd.read_csv("stds.csv")
-
 # Plot Tau, Sigma, Phi
 fig, ax = plt.subplots(figsize=(18, 4))
 ax.plot(stds_df.ID, stds_df['Tau'], label=r'$\tau$', marker='o')
@@ -334,6 +346,7 @@ with open("stds.csv", "rb") as file:
         file_name="stds.csv",
         mime="text/csv"
     )
+
 
 
 
