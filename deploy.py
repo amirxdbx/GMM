@@ -282,8 +282,8 @@ else:
     PGV_upper = PGV * np.exp(Phi_PGV)
     PGV_lower = PGV * np.exp(-Phi_PGV)
      
-     st.text(f'PGA = {np.round(PGA, 2)} cm/s² (+- {np.round(PGA_upper - PGA, 2)})')
-     st.text(f'PGV = {np.round(PGV, 2)} cm/s (+- {np.round(PGV_upper - PGV, 2)})')
+    st.text(f'PGA = {np.round(PGA, 2)} cm/s² (+- {np.round(PGA_upper - PGA, 2)})')
+    st.text(f'PGV = {np.round(PGV, 2)} cm/s (+- {np.round(PGV_upper - PGV, 2)})')
 
     # st.text(f'PGA = {np.round(PGA, 2)} cm/s²')
     # st.text(f'PGV = {np.round(PGV, 2)} cm/s')
@@ -356,6 +356,7 @@ with open("stds.csv", "rb") as file:
         file_name="stds.csv",
         mime="text/csv"
     )
+
 
 
 
