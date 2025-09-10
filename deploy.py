@@ -273,14 +273,14 @@ else:
     PGV = np.exp(PGV_model.predict(scx.transform(x))[0])
 
      # Get std values for PGA and PGV
-     sigma_PGA = stds_df.loc[stds_df["ID"] == "ln(PGA)", "Sigma"].values[0]
-     sigma_PGV = stds_df.loc[stds_df["ID"] == "ln(PGV)", "Sigma"].values[0]
+     Phi_PGA = stds_df.loc[stds_df["ID"] == "ln(PGA)", "Phi"].values[0]
+     Phi_PGV = stds_df.loc[stds_df["ID"] == "ln(PGV)", "Phi"].values[0]
      
      # Compute ± std ranges
-     PGA_upper = PGA * np.exp(sigma_PGA)
-     PGA_lower = PGA * np.exp(-sigma_PGA)
-     PGV_upper = PGV * np.exp(sigma_PGV)
-     PGV_lower = PGV * np.exp(-sigma_PGV)
+     PGA_upper = PGA * np.exp(Phi_PGA)
+     PGA_lower = PGA * np.exp(-Phi_PGA)
+     PGV_upper = PGV * np.exp(Phi_PGV)
+     PGV_lower = PGV * np.exp(-Phi_PGV)
      
      st.text(f'PGA = {np.round(PGA, 2)} cm/s² (+- {np.round(PGA_upper - PGA, 2)})')
      st.text(f'PGV = {np.round(PGV, 2)} cm/s (+- {np.round(PGV_upper - PGV, 2)})')
@@ -299,11 +299,21 @@ else:
     PSAs['T'] = T
     PSAs.sort_values(by=["T"], inplace=True)
     PSAs.reset_index(drop=True, inplace=True)
+    PSAs['Phi'] = [stds_df.loc[stds_df["ID"] == f"ln(PSA_{t})", "Phi"].values[0] for t in PSAs['T']]
+    PSAs['Upper'] = PSAs['PSAs'] * np.exp(PSAs['Phi'])
+    PSAs['Lower'] = PSAs['PSAs'] * np.exp(-PSAs['Phi'])
 
     fig, ax = plt.subplots(figsize=(8, 2))
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.plot(PSAs['T'], PSAs['PSAs'], color='k')
+    # ax.plot(PSAs['T'], PSAs['PSAs'], color='k')
+     # Mean curve
+     ax.plot(PSAs['T'], PSAs['PSAs'], color='k', label="Median")
+     
+     # Shaded ± std
+     ax.fill_between(PSAs['T'], PSAs['Lower'], PSAs['Upper'], 
+                     color='gray', alpha=0.3, label=r'$\pm 1\phi$')
+
     plt.xlabel('T (s)')
     plt.ylabel(r'$PSA\ (cm/s^2)$')
     plt.xlim(0.01, 3.5)
@@ -321,10 +331,10 @@ else:
     csv = convert_df(PSAs)
     st.download_button("📥 Download PSA data as CSV", data=csv, file_name='PSAs.csv', mime='text/csv')
 
-# Plot Tau, Sigma, Phi
+# Plot Tau, Phi, Phi
 fig, ax = plt.subplots(figsize=(18, 4))
 ax.plot(stds_df.ID, stds_df['Tau'], label=r'$\tau$', marker='o')
-ax.plot(stds_df.ID, stds_df['Sigma'], label=r'$\sigma$', marker='s')
+ax.plot(stds_df.ID, stds_df['Phi'], label=r'$\Phi$', marker='s')
 ax.plot(stds_df.ID, stds_df['Phi'], label=r'$\phi$', marker='^')
 
 # Rotate x-axis labels
@@ -346,6 +356,7 @@ with open("stds.csv", "rb") as file:
         file_name="stds.csv",
         mime="text/csv"
     )
+
 
 
 
