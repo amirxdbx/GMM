@@ -73,8 +73,8 @@ scaled_df = pd.DataFrame({
     "Scaled": scaled_x,
 })
 
-st.subheader("🔎 Scaled Inputs (MinMax Output)")
-st.dataframe(scaled_df.style.format({"Original": "{:.3f}", "Scaled": "{:.5f}"}))
+# st.subheader("🔎 Scaled Inputs (MinMax Output)")
+# st.dataframe(scaled_df.style.format({"Original": "{:.3f}", "Scaled": "{:.5f}"}))
 
 
 # Sidebar - CSV Upload
@@ -248,6 +248,7 @@ with open("stds.csv", "rb") as file:
         file_name="stds.csv",
         mime="text/csv"
     )
+
 
 
 
