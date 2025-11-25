@@ -64,6 +64,19 @@ x = pd.DataFrame({
     'strike_slip': [strike_slip]
 })
 
+# ---- NEW: Show Scaled Inputs ----
+scaled_x = scx.transform(x)[0]  # array of length 6
+
+scaled_df = pd.DataFrame({
+    "Feature": ["Mw", "Vs30", "RJB", "normal", "reverse", "strike_slip"],
+    "Original": x.iloc[0].values,
+    "Scaled": scaled_x,
+})
+
+st.subheader("🔎 Scaled Inputs (MinMax Output)")
+st.dataframe(scaled_df.style.format({"Original": "{:.3f}", "Scaled": "{:.5f}"}))
+
+
 # Sidebar - CSV Upload
 st.sidebar.markdown("### 📥 Batch Prediction Instructions")
 
@@ -235,6 +248,7 @@ with open("stds.csv", "rb") as file:
         file_name="stds.csv",
         mime="text/csv"
     )
+
 
 
 
