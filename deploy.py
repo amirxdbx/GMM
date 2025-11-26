@@ -6,22 +6,23 @@ import pickle
 import os
 import joblib
 from PIL import Image
-import io
 
-# Load scaler
+# ===================== Load scaler & stds ======================
+
 with open('scx.pkl', 'rb') as f:
     scx = pickle.load(f)
-# Load stds.csv
+
+# stds.csv has columns: ID, Sigma (intra), Tau (inter), Phi (total)
 stds_df = pd.read_csv("stds.csv")
 
-# Load PGA and PGV models
+# ===================== Load models ======================
+
 @st.cache_resource
 def PGs():
     PGA_model = joblib.load('models/Xgboost_ln(PGA).sav')
     PGV_model = joblib.load('models/Xgboost_ln(PGV).sav')
     return PGA_model, PGV_model
 
-# Load PSA models
 @st.cache_resource
 def call_models():
     T = []
@@ -38,7 +39,8 @@ def call_models():
 
 model = 'Xgboost'
 
-# Streamlit Title
+# ===================== Streamlit UI ======================
+
 st.title("Ground Motion Model")
 st.write("This app predicts the **geometric mean of ground motion intensities**.")
 
@@ -64,7 +66,7 @@ x = pd.DataFrame({
     'strike_slip': [strike_slip]
 })
 
-# ---- NEW: Show Scaled Inputs ----
+# ---- Show Scaled Inputs (validation) ----
 scaled_x = scx.transform(x)[0]  # array of length 6
 
 scaled_df = pd.DataFrame({
@@ -73,13 +75,11 @@ scaled_df = pd.DataFrame({
     "Scaled": scaled_x,
 })
 
-# st.subheader("🔎 Scaled Inputs (MinMax Output)")
-# st.dataframe(scaled_df.style.format({"Original": "{:.3f}", "Scaled": "{:.5f}"}))
-
+st.subheader("🔎 Scaled Inputs (MinMax Output)")
+st.dataframe(scaled_df.style.format({"Original": "{:.3f}", "Scaled": "{:.5f}"}))
 
 # Sidebar - CSV Upload
 st.sidebar.markdown("### 📥 Batch Prediction Instructions")
-
 st.sidebar.markdown("""
 You can perform predictions for multiple records by uploading a CSV or Excel file.
 
@@ -99,11 +99,9 @@ with open("example_batch_input.csv", "rb") as file:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-    
 uploaded_file = st.sidebar.file_uploader("Or upload CSV for batch prediction", type='csv')
 
 # Sidebar footer
-
 st.sidebar.markdown("Made by [Amirhossein Mohammadi](https://www.linkedin.com/in/amir-hossein-mohammadi-86729957/)")
 st.sidebar.markdown("---")
 
@@ -111,7 +109,7 @@ st.sidebar.markdown("---")
 st.title("Summary of Your Inputs:")
 st.write(x)
 
-# ===================== Preprocessing and Batch Prediction ======================
+# ===================== Helpers ======================
 
 def preprocess_batch(df):
     return scx.transform(df[['Mw', 'Vs30', 'RJB', 'normal', 'reverse', 'strike_slip']])
@@ -122,11 +120,12 @@ def run_batch(df):
 
     X = preprocess_batch(df)
     df = df.copy()
-    df['PGA'] = np.exp(PGA_model.predict(X))
-    df['PGV'] = np.exp(PGV_model.predict(X))
+    # ln(IM) -> IM
+    df['PGA'] = np.exp(PGA_model.predict(X))   # cm/s²
+    df['PGV'] = np.exp(PGV_model.predict(X))   # cm/s
 
     for mdl, t in zip(models, T):
-        df[f'PSA_{t}s'] = np.exp(mdl.predict(X))
+        df[f'PSA_{t}s'] = np.exp(mdl.predict(X))   # cm/s²
 
     return df, sorted(T)
 
@@ -135,24 +134,22 @@ def run_batch(df):
 st.title('Outputs:')
 
 if uploaded_file is not None:
+    # -------- BATCH MODE --------
     df_in = pd.read_csv(uploaded_file)
     df_out, T_list = run_batch(df_in)
 
     st.subheader("📊 Batch Predictions")
     st.dataframe(df_out)
 
-   # Optional: Plot all PSA curves
+    # Plot all PSA curves
     fig, ax = plt.subplots(figsize=(8, 4))
-     
     for idx, row in df_out.iterrows():
-         tsa = [row[f'PSA_{t}s'] for t in T_list]
-         ax.loglog(T_list, tsa, alpha=0.6, label=f'Record {idx+1}')
-     
+        tsa = [row[f'PSA_{t}s'] for t in T_list]
+        ax.loglog(T_list, tsa, alpha=0.6, label=f'Record {idx+1}')
     ax.set(xlabel='T (s)', ylabel='PSA (cm/s²)', xlim=(0.01, 3.5))
     ax.grid(True, which='both')
     ax.set_title("PSA Spectra for All Records")
     ax.legend(loc='best', fontsize='small', ncol=2)
-     
     st.pyplot(fig)
 
     # Download option
@@ -160,56 +157,78 @@ if uploaded_file is not None:
     st.download_button("📥 Download batch results as CSV", data=csv, file_name="batch_results.csv", mime="text/csv")
 
 else:
+    # -------- SINGLE RECORD MODE --------
     PGA_model, PGV_model = PGs()
-    PGA = np.exp(PGA_model.predict(scx.transform(x))[0])
-    PGV = np.exp(PGV_model.predict(scx.transform(x))[0])
+    X_single = scx.transform(x)
 
-    # Get std values for PGA and PGV
+    # ln(IM)
+    lnPGA = PGA_model.predict(X_single)[0]
+    lnPGV = PGV_model.predict(X_single)[0]
+
+    # IM in linear units
+    PGA = np.exp(lnPGA)   # cm/s²
+    PGV = np.exp(lnPGV)   # cm/s
+
+    # Get TOTAL std (Phi) for PGA and PGV in ln units
     Phi_PGA = stds_df.loc[stds_df["ID"] == "ln(PGA)", "Phi"].values[0]
     Phi_PGV = stds_df.loc[stds_df["ID"] == "ln(PGV)", "Phi"].values[0]
-     
-     # Compute ± std ranges
-    PGA_upper = PGA * np.exp(Phi_PGA)
-    PGA_lower = PGA * np.exp(-Phi_PGA)
-    PGV_upper = PGV * np.exp(Phi_PGV)
-    PGV_lower = PGV * np.exp(-Phi_PGV)
-     
+
+    # Correct ±1 std ranges:
+    # Upper = exp(ln(IM) + Phi), Lower = exp(ln(IM) - Phi)
+    PGA_upper = np.exp(lnPGA + Phi_PGA)
+    PGA_lower = np.exp(lnPGA - Phi_PGA)
+    PGV_upper = np.exp(lnPGV + Phi_PGV)
+    PGV_lower = np.exp(lnPGV - Phi_PGV)
+
     st.text(f'PGA = {np.round(PGA, 2)} cm/s² (+- {np.round(PGA_upper - PGA, 2)})')
     st.text(f'PGV = {np.round(PGV, 2)} cm/s (+- {np.round(PGV_upper - PGV, 2)})')
 
-    # st.text(f'PGA = {np.round(PGA, 2)} cm/s²')
-    # st.text(f'PGV = {np.round(PGV, 2)} cm/s')
-
-    prediction = []
+    # PSA predictions for this single input
     models, T, names = call_models()
 
-    for Model in models:
-        prediction.append(np.exp(Model.predict(scx.transform(x))[0]))
+    lnPSA_list = []
+    PSA_list = []
+    Phi_list = []
+
+    for t, Model in zip(T, models):
+        lnPSA = Model.predict(X_single)[0]       # ln(PSA[cm/s²])
+        lnPSA_list.append(lnPSA)
+        PSA_list.append(np.exp(lnPSA))
+        # total std (Phi) for that period
+        Phi_t = stds_df.loc[stds_df["ID"] == f"ln(PSA={t})", "Phi"].values[0]
+        Phi_list.append(Phi_t)
 
     PSAs = pd.DataFrame()
-    PSAs['PSAs'] = prediction
     PSAs['T'] = T
+    PSAs['lnPSA'] = lnPSA_list
+    PSAs['PSAs'] = PSA_list                 # median PSA in cm/s²
+    PSAs['Phi'] = Phi_list                  # total std in ln units
+
+    # Correct upper/lower envelopes
+    PSAs['Upper'] = np.exp(PSAs['lnPSA'] + PSAs['Phi'])
+    PSAs['Lower'] = np.exp(PSAs['lnPSA'] - PSAs['Phi'])
+
     PSAs.sort_values(by=["T"], inplace=True)
     PSAs.reset_index(drop=True, inplace=True)
-    PSAs['Phi'] = [stds_df.loc[stds_df["ID"] == f"ln(PSA={t})", "Phi"].values[0] for t in PSAs['T']]
-    PSAs['Upper'] = PSAs['PSAs'] * np.exp(PSAs['Phi'])
-    PSAs['Lower'] = PSAs['PSAs'] * np.exp(-PSAs['Phi'])
 
+    # ---- Plot response spectrum with ±1Φ ----
     fig, ax = plt.subplots(figsize=(8, 2))
     ax.set_xscale('log')
     ax.set_yscale('log')
-    # ax.plot(PSAs['T'], PSAs['PSAs'], color='k')
-    # Mean curve
+
+    # Median curve
     ax.plot(PSAs['T'], PSAs['PSAs'], color='k', label="Median")
-     
-    # Shaded ± std
-    ax.fill_between(PSAs['T'], PSAs['Lower'], PSAs['Upper'], 
-                     color='gray', alpha=0.3, label=r'$\pm 1\phi$')
+
+    # Shaded ± total std (Phi)
+    ax.fill_between(
+        PSAs['T'], PSAs['Lower'], PSAs['Upper'],
+        color='gray', alpha=0.3, label=r'$\pm 1\Phi_{\mathrm{total}}$'
+    )
 
     plt.xlabel('T (s)')
     plt.ylabel(r'$PSA\ (cm/s^2)$')
     plt.xlim(0.01, 3.5)
-    plt.ylim(0, 1000)
+    plt.ylim(0.1, 1000)  # avoid zero for log scale
     plt.grid(which='both')
     plt.savefig('sprectra.png', dpi=600, bbox_inches='tight', pad_inches=0.05)
     plt.gcf().subplots_adjust(bottom=0.15)
@@ -218,23 +237,24 @@ else:
     st.image(image)
 
     def convert_df(df):
-        return df.to_csv().encode('utf-8')
+        return df.to_csv(index=False).encode('utf-8')
 
     csv = convert_df(PSAs)
     st.download_button("📥 Download PSA data as CSV", data=csv, file_name='PSAs.csv', mime='text/csv')
 
-# Plot Tau, Phi, Phi
-fig, ax = plt.subplots(figsize=(18, 4))
-ax.plot(stds_df.ID, stds_df['Tau'], label=r'$\tau$', marker='o')
-ax.plot(stds_df.ID, stds_df['Phi'], label=r'$\Phi$', marker='s')
-ax.plot(stds_df.ID, stds_df['Phi'], label=r'$\phi$', marker='^')
+# ===================== Plot Tau / Sigma / Phi over IMs ======================
 
-# Rotate x-axis labels
+fig, ax = plt.subplots(figsize=(18, 4))
+
+ax.plot(stds_df.ID, stds_df['Tau'],   label=r'$\tau$ (inter-event)', marker='o')
+ax.plot(stds_df.ID, stds_df['Sigma'], label=r'$\sigma$ (intra-event)', marker='s')
+ax.plot(stds_df.ID, stds_df['Phi'],   label=r'$\Phi$ (total)', marker='^')
+
 plt.setp(ax.get_xticklabels(), rotation=90)
 
 ax.set_xlabel("IMs")
-ax.set_ylabel("Value")
-ax.set_title("τ, σ, and ϕ for IMs")
+ax.set_ylabel("Value (ln-units)")
+ax.set_title(r"$\tau$ (inter), $\sigma$ (intra), and $\Phi$ (total) for IMs")
 ax.legend()
 ax.grid(True)
 
@@ -248,18 +268,3 @@ with open("stds.csv", "rb") as file:
         file_name="stds.csv",
         mime="text/csv"
     )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
