@@ -1,0 +1,109 @@
+/* Main App Background */
+.stApp {
+    background-color: #f8fafc; /* Very light slate */
+}
+
+/* Import Modern Font */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+html, body, [class*="css"]  {
+    font-family: 'Outfit', sans-serif;
+}
+
+/* Hide Streamlit Branding */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+
+/* Sidebar Styling - Dark Theme */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    color: white;
+}
+[data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+    color: #e2e8f0;
+}
+[data-testid="stSidebar"] label {
+    color: #cbd5e1;
+}
+
+/* Main Header */
+h1 {
+    color: #0f172a;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px solid #0ea5e9; /* Cyan accent */
+}
+
+h2, h3 {
+    color: #334155;
+}
+
+/* Metrics - Custom Card Look */
+[data-testid="stMetric"] {
+    background-color: white;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e2e8f0;
+}
+
+[data-testid="stMetricLabel"] {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+[data-testid="stMetricValue"] {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+/* Buttons */
+.stButton button {
+    background: linear-gradient(to right, #0ea5e9, #2563eb); /* Cyan to Blue */
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(14, 165, 233, 0.25);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stButton button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 10px rgba(14, 165, 233, 0.4);
+    color: white; /* Ensure text stays white */
+}
+
+/* Custom Metric Card Class (for result section) */
+.metric-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #f1f5f9;
+    text-align: center;
+}
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #0284c7; /* Darker Cyan */
+    margin: 10px 0;
+}
+
+.metric-label {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Alert/Info Boxes */
+.stAlert {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}

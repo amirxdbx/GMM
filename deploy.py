@@ -10,76 +10,8 @@ from PIL import Image
 import onnxruntime as ort  # NEW
 
 def load_css():
-    st.markdown("""
-        <style>
-        /* Import Google Font */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
-        html, body, [class*="css"]  {
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* Hides the Streamlit hamburger menu and footer for a cleaner look */
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-
-        /* Header Styling */
-        h1 {
-            color: #2c3e50;
-            font-weight: 700;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #3498db;
-        }
-        h2, h3 {
-            color: #34495e;
-        }
-
-        /* Metric Card Styling */
-        .metric-card {
-            background-color: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            text-align: center;
-        }
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #2980b9;
-        }
-        .metric-label {
-            font-size: 1rem;
-            color: #7f8c8d;
-            margin-bottom: 5px;
-        }
-        .metric-delta {
-            font-size: 0.9rem;
-            color: #95a5a6;
-        }
-
-        /* Sidebar Styling */
-        [data-testid="stSidebar"] {
-            background-color: #f7f9fc;
-            border-right: 1px solid #e6e6e6;
-        }
-        
-        /* Button Styling */
-        .stButton button {
-            background-color: #3498db;
-            color: white;
-            border-radius: 8px;
-            border: none;
-            padding: 0.5rem 1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .stButton button:hover {
-            background-color: #2980b9;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        </style>
-    """, unsafe_allow_html=True)
+    with open("style.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 
 def load_onnx_model(path: str):
@@ -290,6 +222,9 @@ if uploaded_file is not None:
     ax.grid(True, which='both')
     ax.set_title("PSA Spectra for All Records")
     ax.legend(loc='best', fontsize='small', ncol=2)
+    ax.set_title("PSA Spectra for All Records")
+    ax.legend(loc='best', fontsize='small', ncol=2)
+    fig.patch.set_facecolor('white')
     st.pyplot(fig)
 
     # Download option
@@ -332,7 +267,8 @@ else:
         st.metric(
             label="Median PGA",
             value=f"{np.round(PGA, 2)} cm/s²",
-            delta=f"± {np.round(PGA_upper - PGA, 2)}"
+            delta=f"± {np.round(PGA_upper - PGA, 2)}",
+            delta_color="off"
         )
     
     with colB:
@@ -340,13 +276,15 @@ else:
         st.metric(
             label="Median PGV",
             value=f"{np.round(PGV, 2)} cm/s",
-            delta=f"± {np.round(PGV_upper - PGV, 2)}"
+            delta=f"± {np.round(PGV_upper - PGV, 2)}",
+            delta_color="off"
         )
 
     # PSA predictions for this single input
     models, T, names = call_models()
 
     lnPSA_list = []
+    
     PSA_list = []
     Phi_list = []
 
@@ -390,11 +328,12 @@ else:
     plt.xlim(0.01, 3.5)
     plt.ylim(0.1, 1000)  # avoid zero for log scale
     plt.grid(which='both')
-    plt.savefig('sprectra.png', dpi=600, bbox_inches='tight', pad_inches=0.05)
-    plt.gcf().subplots_adjust(bottom=0.15)
-
-    image = Image.open('sprectra.png')
-    st.image(image)
+    plt.ylim(0.1, 1000)  # avoid zero for log scale
+    plt.grid(which='both')
+    
+    # Force white background for visibility in dark mode
+    fig.patch.set_facecolor('white')
+    st.pyplot(fig)
 
     def convert_df(df):
         return df.to_csv(index=False).encode('utf-8')
@@ -417,6 +356,10 @@ ax.set_ylabel("Value (ln-units)")
 ax.set_title(r"$\tau$ (inter), $\sigma$ (intra), and $\Phi$ (total) for IMs")
 ax.legend()
 ax.grid(True)
+
+ax.legend()
+ax.grid(True)
+fig.patch.set_facecolor('white')
 
 st.pyplot(fig)
 
