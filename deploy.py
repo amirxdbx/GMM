@@ -58,6 +58,7 @@ def call_models():
     T = []
     models = []
     names = []
+    model = "Xgboost"
     for root, dirs, files in os.walk('onnx_models/', topdown=False):
         for name in files:
             if name.endswith(".onnx") and name.find(model) != -1 and name.find('PG') == -1:
