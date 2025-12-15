@@ -266,8 +266,8 @@ else:
         st.info(f"**PGA** (Peak Ground Acceleration)")
         st.metric(
             label="Median PGA",
-            value=f"{np.round(PGA, 2)} cm/s²",
-            delta=f"std = ± {np.round(PGA_upper - PGA, 2)}",
+            value=f"{PGA:.2f} cm/s²",
+            delta=f"std = ± {(PGA_upper - PGA):.2f}",
             delta_color="off"
         )
     
@@ -275,8 +275,8 @@ else:
         st.info(f"**PGV** (Peak Ground Velocity)")
         st.metric(
             label="Median PGV",
-            value=f"{np.round(PGV, 2)} cm/s",
-            delta=f"± {np.round(PGV_upper - PGV, 2)}",
+            value=f"{PGV:.2f} cm/s",
+            delta=f"std = ± {(PGV_upper - PGV):.2f}",
             delta_color="off"
         )
 
