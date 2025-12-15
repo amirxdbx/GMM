@@ -6,7 +6,81 @@ import pickle
 import os
 from PIL import Image
 
+
 import onnxruntime as ort  # NEW
+
+def load_css():
+    st.markdown("""
+        <style>
+        /* Import Google Font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        html, body, [class*="css"]  {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Hides the Streamlit hamburger menu and footer for a cleaner look */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+
+        /* Header Styling */
+        h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #3498db;
+        }
+        h2, h3 {
+            color: #34495e;
+        }
+
+        /* Metric Card Styling */
+        .metric-card {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2980b9;
+        }
+        .metric-label {
+            font-size: 1rem;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        .metric-delta {
+            font-size: 0.9rem;
+            color: #95a5a6;
+        }
+
+        /* Sidebar Styling */
+        [data-testid="stSidebar"] {
+            background-color: #f7f9fc;
+            border-right: 1px solid #e6e6e6;
+        }
+        
+        /* Button Styling */
+        .stButton button {
+            background-color: #3498db;
+            color: white;
+            border-radius: 8px;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .stButton button:hover {
+            background-color: #2980b9;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
 
 def load_onnx_model(path: str):
     """
@@ -79,9 +153,11 @@ def call_models():
 
 
 # ===================== Streamlit UI ======================
+load_css()
 
 st.title("Ground Motion Model")
-st.write("This app predicts the **geometric mean of ground motion intensities**.")
+st.markdown("This app predicts the **geometric mean of ground motion intensities** using a machine learning based approach.")
+st.markdown("---")
 
 # Sidebar - Input
 st.sidebar.image("logo.png", width=30)
@@ -132,10 +208,10 @@ Each row must include the following columns:
 
 with open("example_batch_input.csv", "rb") as file:
     st.sidebar.download_button(
-        label="📥 Download Excel Template",
+        label="📥 Download CSV Template",
         data=file,
         file_name="example_batch_input.csv",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        mime="text/csv"
     )
 
 uploaded_file = st.sidebar.file_uploader("Or upload CSV for batch prediction", type='csv')
@@ -145,8 +221,14 @@ st.sidebar.markdown("Made by [Amirhossein Mohammadi](https://www.linkedin.com/in
 st.sidebar.markdown("---")
 
 # Title - Summary of Input
-st.title("Summary of Your Inputs:")
-st.write(x)
+with st.container():
+    st.subheader("Your Input Summary")
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Moment Magnitude (Mw)", f"{Mw}")
+    col2.metric("Distance (RJB)", f"{RJB} km")
+    col3.metric("Vs30", f"{Vs30} m/s")
+    col4.metric("Mechanism", type)
+    # st.write(x) # Debug view suppressed for cleaner UI
 
 # ===================== Helpers ======================
 
@@ -178,7 +260,10 @@ st.title('Outputs:')
 
 if uploaded_file is not None:
     # -------- BATCH MODE --------
-    df_in = pd.read_csv(uploaded_file, encoding="latin1")  # or "cp1252"
+    try:
+        df_in = pd.read_csv(uploaded_file,  sep=None, engine='python', encoding="latin1")
+    except:
+        df_in = pd.read_csv(uploaded_file,  sep=None, engine='python', encoding="utf-8")
     df_out, T_list = run_batch(df_in)
 
     st.subheader("📊 Batch Predictions")
@@ -225,8 +310,26 @@ else:
     PGV_upper = np.exp(lnPGV + Phi_PGV)
     PGV_lower = np.exp(lnPGV - Phi_PGV)
 
-    st.text(f'PGA = {np.round(PGA, 2)} cm/s² (+- {np.round(PGA_upper - PGA, 2)})')
-    st.text(f'PGV = {np.round(PGV, 2)} cm/s (+- {np.round(PGV_upper - PGV, 2)})')
+    # Display Results in Cards using standard Streamlit Metrics
+    st.markdown("### 📊 Prediction Results")
+    
+    colA, colB = st.columns(2)
+    
+    with colA:
+        st.info(f"**PGA** (Peak Ground Acceleration)")
+        st.metric(
+            label="Median PGA",
+            value=f"{np.round(PGA, 2)} cm/s²",
+            delta=f"± {np.round(PGA_upper - PGA, 2)}"
+        )
+    
+    with colB:
+        st.info(f"**PGV** (Peak Ground Velocity)")
+        st.metric(
+            label="Median PGV",
+            value=f"{np.round(PGV, 2)} cm/s",
+            delta=f"± {np.round(PGV_upper - PGV, 2)}"
+        )
 
     # PSA predictions for this single input
     models, T, names = call_models()
