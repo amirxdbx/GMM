@@ -135,7 +135,7 @@ st.title('Outputs:')
 
 if uploaded_file is not None:
     # -------- BATCH MODE --------
-    df_in = pd.read_csv(uploaded_file)
+    df_in = pd.read_csv(uploaded_file, encoding="latin1")  # or "cp1252"
     df_out, T_list = run_batch(df_in)
 
     st.subheader("📊 Batch Predictions")
@@ -268,4 +268,5 @@ with open("stds.csv", "rb") as file:
         file_name="stds.csv",
         mime="text/csv"
     )
+
 
