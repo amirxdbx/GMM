@@ -15,16 +15,16 @@ html, body, [class*="css"]  {
 footer {visibility: hidden;}
 header {visibility: hidden;}
 
-/* Sidebar Styling - Dark Theme */
+/* Sidebar Styling - Light Theme with Border */
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-    color: white;
+    background: #f8fafc; /* Light Slate */
+    border-right: 1px solid #e2e8f0;
 }
 [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
-    color: #e2e8f0;
+    color: #334155; /* Dark Slate */
 }
-[data-testid="stSidebar"] label {
-    color: #cbd5e1;
+[data-testid="stSidebar"] label, [data-testid="stSidebar"] div, [data-testid="stSidebar"] span {
+    color: #475569; /* Medium Slate */
 }
 
 /* Main Header */

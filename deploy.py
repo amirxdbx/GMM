@@ -267,7 +267,7 @@ else:
         st.metric(
             label="Median PGA",
             value=f"{np.round(PGA, 2)} cm/s²",
-            delta=f"± {np.round(PGA_upper - PGA, 2)}",
+            delta=f"std = ± {np.round(PGA_upper - PGA, 2)}",
             delta_color="off"
         )
     
