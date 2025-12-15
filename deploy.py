@@ -4,8 +4,26 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import pickle
 import os
-import joblib
 from PIL import Image
+
+import onnxruntime as ort  # NEW
+
+def load_onnx_model(path: str):
+    """
+    Load an ONNX model and return a callable predict(X) -> 1D np.array.
+
+    X must be a 2D array (n_samples, n_features).
+    """
+    sess = ort.InferenceSession(path, providers=["CPUExecutionProvider"])
+    input_name = sess.get_inputs()[0].name
+
+    def predict(X):
+        X_arr = np.asarray(X, dtype=np.float32)
+        # sess.run returns a list of outputs; we assume a single output
+        y = sess.run(None, {input_name: X_arr})[0]
+        return y.reshape((X_arr.shape[0],))
+
+    return predict
 
 # ===================== Load scaler & stds ======================
 
@@ -19,25 +37,45 @@ stds_df = pd.read_csv("stds.csv")
 
 @st.cache_resource
 def PGs():
-    PGA_model = joblib.load('models/Xgboost_ln(PGA).sav')
-    PGV_model = joblib.load('models/Xgboost_ln(PGV).sav')
+    """
+    Load ONNX models for ln(PGA) and ln(PGV).
+    Returned objects are callables: y = model(X).
+    """
+    PGA_model = load_onnx_model('onnx_models/Xgboost_ln(PGA).onnx')
+    PGV_model = load_onnx_model('onnx_models/Xgboost_ln(PGV).onnx')
     return PGA_model, PGV_model
 
 @st.cache_resource
 def call_models():
+    """
+    Load ONNX PSA models.
+
+    Expects files like:
+        onnx_models/Xgboost_ln(PSA=0.10).onnx
+        onnx_models/Xgboost_ln(PSA=0.20).onnx
+        ...
+    """
     T = []
     models = []
     names = []
-    for root, dirs, files in os.walk('models/', topdown=False):
+    for root, dirs, files in os.walk('onnx_models/', topdown=False):
         for name in files:
-            if name.find(model) != -1 and name.find('PG') == -1:
-                T.append(float((name.replace('.sav', '')).replace(f'{model}_ln(PSA=', '').replace(')', '')))
-                tuned_model = joblib.load(f'models/{name}')
+            if name.endswith(".onnx") and name.find(model) != -1 and name.find('PG') == -1:
+                # Extract the period from e.g. "Xgboost_ln(PSA=0.20).onnx"
+                period_str = (
+                    name.replace(".onnx", "")
+                        .replace(f"{model}_ln(PSA=", "")
+                        .replace(")", "")
+                )
+                T.append(float(period_str))
+
+                full_path = os.path.join(root, name)
+                tuned_model = load_onnx_model(full_path)
                 models.append(tuned_model)
                 names.append(name)
+
     return models, T, names
 
-model = 'Xgboost'
 
 # ===================== Streamlit UI ======================
 
@@ -120,12 +158,16 @@ def run_batch(df):
 
     X = preprocess_batch(df)
     df = df.copy()
+
     # ln(IM) -> IM
-    df['PGA'] = np.exp(PGA_model.predict(X))   # cm/s²
-    df['PGV'] = np.exp(PGV_model.predict(X))   # cm/s
+    lnPGA = PGA_model(X)          # shape (n_samples,)
+    lnPGV = PGV_model(X)
+    df['PGA'] = np.exp(lnPGA)     # cm/s²
+    df['PGV'] = np.exp(lnPGV)     # cm/s
 
     for mdl, t in zip(models, T):
-        df[f'PSA_{t}s'] = np.exp(mdl.predict(X))   # cm/s²
+        lnPSA = mdl(X)
+        df[f'PSA_{t}s'] = np.exp(lnPSA)   # cm/s²
 
     return df, sorted(T)
 
@@ -160,14 +202,16 @@ else:
     # -------- SINGLE RECORD MODE --------
     PGA_model, PGV_model = PGs()
     X_single = scx.transform(x)
-
+    
     # ln(IM)
-    lnPGA = PGA_model.predict(X_single)[0]
-    lnPGV = PGV_model.predict(X_single)[0]
+    lnPGA = PGA_model(X_single)[0]
+    lnPGV = PGV_model(X_single)[0]
+
 
     # IM in linear units
     PGA = np.exp(lnPGA)   # cm/s²
     PGV = np.exp(lnPGV)   # cm/s
+
 
     # Get TOTAL std (Phi) for PGA and PGV in ln units
     Phi_PGA = stds_df.loc[stds_df["ID"] == "ln(PGA)", "Phi"].values[0]
@@ -191,7 +235,7 @@ else:
     Phi_list = []
 
     for t, Model in zip(T, models):
-        lnPSA = Model.predict(X_single)[0]       # ln(PSA[cm/s²])
+        lnPSA = Model(X_single)[0]              # ln(PSA[cm/s²])
         lnPSA_list.append(lnPSA)
         PSA_list.append(np.exp(lnPSA))
         # total std (Phi) for that period
@@ -268,5 +312,6 @@ with open("stds.csv", "rb") as file:
         file_name="stds.csv",
         mime="text/csv"
     )
+
 
 
