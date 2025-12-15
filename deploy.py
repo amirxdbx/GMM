@@ -260,10 +260,22 @@ st.title('Outputs:')
 
 if uploaded_file is not None:
     # -------- BATCH MODE --------
-    try:
-        df_in = pd.read_csv(uploaded_file,  sep=None, engine='python', encoding="latin1")
-    except:
-        df_in = pd.read_csv(uploaded_file,  sep=None, engine='python', encoding="utf-8")
+    # -------- BATCH MODE --------
+    # Helper to try robust reading strategies
+    encodings_to_try = ["utf-8", "utf-8-sig", "latin1", "cp1252", "utf-16"]
+    df_in = None
+    
+    for encoding in encodings_to_try:
+        try:
+            uploaded_file.seek(0)  # Reset buffer position before each attempt
+            df_in = pd.read_csv(uploaded_file, sep=None, engine='python', encoding=encoding)
+            break
+        except Exception:
+            continue
+            
+    if df_in is None:
+        st.error("Could not read the file. Please check encoding (try saving as standard CSV UTF-8).")
+        st.stop()
     df_out, T_list = run_batch(df_in)
 
     st.subheader("📊 Batch Predictions")
