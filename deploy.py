@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import streamlit as st
 import pickle
 import os
 from PIL import Image
-
+import streamlit as st
+st.write("Starting up…")
 
 import onnxruntime as ort  # NEW
 
@@ -371,6 +371,7 @@ with open("stds.csv", "rb") as file:
         file_name="stds.csv",
         mime="text/csv"
     )
+
 
 
 
