@@ -4,16 +4,14 @@ numpy>=1.21.6,<2.0
 
 # ---- Visualization ----
 matplotlib>=3.7
-pyparsing<3.0.0
 
 # ---- ML stack ----
 scikit-learn==1.0.2
-xgboost==1.5.0
 joblib==1.1.1
-pickle-mixin==1.0.2
 
 # ---- ONNX ----
 onnxruntime==1.18.0
 
 # ---- Streamlit ----
 streamlit>=1.41
+
